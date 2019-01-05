@@ -1,0 +1,14 @@
+{% extends "admin/change_list.html" %}
+{% load i18n admin_static %}
+
+{% block object-tools-items %}
+
+    <li>
+        <a href={% url "app:codes-add-multiple"%} class="addlink">Add Multiple Codes</a>
+    </li>
+    {{ block.super }}
+    <li>
+        <a href={% url "app:codes-report"%} class="addlink">Export Report</a>
+    </li>
+
+{% endblock %}
