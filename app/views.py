@@ -62,18 +62,33 @@ class AddCodesView(FormView):
     def form_valid(self, form):
         total_codes = form.cleaned_data.get('total_codes_to_generate')
         code_length = getattr(settings, 'CODE_LENGTH', 14)
-        codes = []
-        for _ in range(total_codes):
-            codes.append(get_random_string(length=code_length))
+        batch_size = getattr(settings, 'BATCH_SIZE', 1000)
 
-        codes = set(codes)
-        codes_in_db = Code.objects.filter(code__in=codes).values_list('code', flat=True)
-        codes_not_in_db = codes - set(codes_in_db)
-        code_obj_list = []
-        for code in codes_not_in_db:
-            code_obj_list.append(Code(code=code))
+        batches_to_be_made = 0 if total_codes < batch_size else total_codes // batch_size
 
-        Code.objects.bulk_create(code_obj_list)
+        if total_codes % batch_size != 0:
+            batches_to_be_made += 1
+        batch = 1
+        index = 0
+        while batch <= batches_to_be_made:
+            if batch == batches_to_be_made:
+                loop_range = range(index, total_codes)
+            else:
+                loop_range = range(0, batch_size)
+
+            codes = []
+            codes = [get_random_string(length=code_length) for _ in loop_range]
+
+            codes = set(codes)
+            codes_in_db = Code.objects.filter(code__in=codes).values_list('code', flat=True)
+            codes_not_in_db = codes - set(codes_in_db)
+            code_obj_list = []
+            for code in codes_not_in_db:
+                code_obj_list.append(Code(code=code))
+
+            Code.objects.bulk_create(code_obj_list)
+            index += batch_size
+            batch += 1
         messages.success(self.request, "Codes imported successfully")
         return super(AddCodesView, self).form_valid(form)
 

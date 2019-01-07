@@ -122,3 +122,4 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 CODE_LENGTH = 14
+BATCH_SIZE = 1000
